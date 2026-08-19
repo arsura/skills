@@ -1,0 +1,67 @@
+---
+description: >-
+  Order Go functions top-down — each caller immediately followed by its callees
+  in call order (newspaper style). Never batch helpers at file bottom.
+globs: **/*.go
+alwaysApply: false
+---
+
+# Top-Down Function Order
+
+If `A` calls `B`, put `B` **on the very next function(s)** below `A` (same call order).
+
+**Not** alphabetical, **not** helpers-first, **not** "all tests then all helpers".
+
+## File skeleton
+
+```
+package + imports → constants/vars → types → entry points
+→ lifecycle hooks → lifecycle callees (directly below)
+→ tests + callees (interleaved)
+```
+
+## Core pattern
+
+After each `Test*`, append every function it calls, **in call order**, before the next test:
+
+```go
+func (s *Suite) TestAdEvents() {
+    s.insertAdEvents(...)
+    actual := s.queryAdEvents(...)
+    s.assertAdEvents(expected, actual)
+}
+
+func (s *Suite) insertAdEvents(...) { ... }
+func (s *Suite) queryAdEvents(...) { ... }
+func (s *Suite) assertAdEvents(...) {
+    s.assertAdEventEqual(...)
+}
+func (s *Suite) assertAdEventEqual(...) { ... }
+
+func (s *Suite) TestAdEventsDistributed() { ... }
+```
+
+## Shared helpers
+
+- Define on **first use**, directly under that test's chain.
+- Reused helpers: later tests come **after** the helper block.
+- **New** helper for a later test: put it directly under that test.
+
+## Anti-patterns
+
+```go
+// BAD — helpers at bottom, far from callers
+func TestA() { makeRow(); insert() }
+func TestB() { makeRow() }
+func makeRow() { ... }
+func insert() { ... }
+
+// BAD — helpers before tests
+func insert() { ... }
+func TestA() { insert() }
+```
+
+## When editing
+
+1. Make the logic change.
+2. Reorder so every callee sits directly under its caller — no behavior change.
