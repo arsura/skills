@@ -37,7 +37,9 @@ The bad WHY restates WHAT. The good WHY names the pain and cost.
 **Input:** Restaurant owners want to pause orders during rush hour without closing the store. Issue: FOOD-482.
 
 ```markdown
-**WHO:** Restaurant owner on the merchant app<br>**WHAT:** Pause incoming orders temporarily while keeping the store listed as open<br>**WHY:** During unexpected rushes, owners cannot fulfill orders in time and receive cancellations that hurt their rating
+**WHO:** Restaurant owner on the merchant app
+**WHAT:** Pause incoming orders temporarily while keeping the store listed as open
+**WHY:** During unexpected rushes, owners cannot fulfill orders in time and receive cancellations that hurt their rating
 
 ## Acceptance Criteria
 
@@ -49,6 +51,8 @@ The bad WHY restates WHAT. The good WHY names the pain and cost.
   - new customer orders are blocked
   - **AND:** the store still appears open on the consumer app
 
+------
+
 ### Owner resumes orders
 - **GIVEN:**
   - orders are paused
@@ -56,6 +60,8 @@ The bad WHY restates WHAT. The good WHY names the pain and cost.
 - **THEN:**
   - new orders are accepted again
   - **AND:** the pause state clears without a page reload
+
+------
 
 ### Pause expires automatically
 - **GIVEN:**

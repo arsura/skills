@@ -14,11 +14,12 @@ Turn rough requirements into a concise English user story and push it to Jira.
 
 ## Workflow
 
-1. **Collect input** from the user: requirement, Jira issue key (e.g. `PROJ-123`), optional context (persona, constraints, edge cases). Ask only for what is missing.
-2. **Draft** WHO / WHAT / WHY and Acceptance Criteria (see formats below). While drafting AC, note gaps and ambiguities as **Open Questions** (see [Open Questions](#open-questions)).
-3. **Validate WHY** before showing or publishing (see [WHY validation](#why-validation)).
-4. **Show draft + Open Questions** in chat for review when the user did not ask to skip review. If Open Questions would materially change AC, ask them before publishing to Jira.
-5. **Publish to Jira** via Atlassian MCP once the draft is approved or the user asked to update Jira directly.
+1. **Collect input** from the user: requirement, Jira issue key (e.g. `PROJ-123`), optional context. Ask only for what is missing.
+2. **Fetch latest Jira state first** when an issue key exists — before drafting and again immediately before publish (see [Read before write](#read-before-write)).
+3. **Draft** WHO / WHAT / WHY and Acceptance Criteria from the **live Jira description + user request**, not stale chat history. While drafting AC, note gaps as **Open Questions**.
+4. **Validate WHY** before showing or publishing (see [WHY validation](#why-validation)).
+5. **Show draft + Open Questions** in chat for review when the user did not ask to skip review.
+6. **Publish to Jira** via Atlassian MCP once approved or the user asked to update Jira directly.
 
 ## WHO / WHAT / WHY
 
@@ -28,13 +29,33 @@ Turn rough requirements into a concise English user story and push it to Jira.
 | **WHAT** | The capability or change. Concrete and testable. No implementation detail unless the user required it. |
 | **WHY** | Business or user outcome. Must **not** restate WHAT. See validation below. |
 
-Use this exact layout (labels bold, content plain). **One block, line breaks only** — like Shift+Enter in Jira, not Enter (no blank lines between rows):
+Use this layout (labels bold, content plain). **One paragraph, soft line breaks** between rows (Shift+Enter in Jira), not separate paragraphs.
+
+**Chat preview** (readable):
 
 ```markdown
-**WHO:** [role or persona]<br>**WHAT:** [capability or change]<br>**WHY:** [reason this matters]
+**WHO:** [role or persona]
+**WHAT:** [capability or change]
+**WHY:** [reason this matters]
 ```
 
-In Jira markdown, join WHO / WHAT / WHY with `<br>`. Do **not** put a blank line between them (that creates separate paragraphs).
+**Jira publish** — use ADF (`contentFormat: "adf"`), not markdown. Put WHO / WHAT / WHY in **one** `paragraph` node; separate rows with `hardBreak`. **Never use `<br>`** — Jira markdown renders it as literal text.
+
+```json
+{
+  "type": "paragraph",
+  "content": [
+    { "type": "text", "text": "WHO: ", "marks": [{ "type": "strong" }] },
+    { "type": "text", "text": "Ops" },
+    { "type": "hardBreak" },
+    { "type": "text", "text": "WHAT: ", "marks": [{ "type": "strong" }] },
+    { "type": "text", "text": "Import records via CSV upload" },
+    { "type": "hardBreak" },
+    { "type": "text", "text": "WHY: ", "marks": [{ "type": "strong" }] },
+    { "type": "text", "text": "Merchants miss accurate recommendations without up-to-date config" }
+  ]
+}
+```
 
 ## WHY validation
 
@@ -54,7 +75,7 @@ Write in **English**. Keep each scenario short. No numbered AC items (so they ca
 
 Section heading: `## Acceptance Criteria` (H2).
 
-Each scenario title: `### [Short scenario title]` (H3). Structure:
+Each scenario title: `### [Short scenario title]` (H3). Put a **divider between scenarios**, not before the first or after the last. Structure:
 
 ```markdown
 ## Acceptance Criteria
@@ -67,6 +88,12 @@ Each scenario title: `### [Short scenario title]` (H3). Structure:
 - **THEN:**
   - [expected outcome]
   - **AND:** [additional outcome]
+
+------
+
+### [Next scenario title]
+- **GIVEN:**
+  ...
 ```
 
 Rules:
@@ -74,7 +101,25 @@ Rules:
 - **GIVEN**, **WHEN**, **THEN**, **AND** are always bold.
 - Use bullets; indent **AND** under its parent (GIVEN or THEN).
 - One scenario = one behavior. Split unrelated behaviors into separate scenarios.
+- Separate each AC scenario with `------` (chat) or ADF `rule` node (Jira). No divider after the final scenario.
 - Cover happy path and important edge cases the user mentioned. Do not invent scope.
+
+## Read before write
+
+When an issue key exists, **always** call `getJiraIssue` with `fields: ["summary", "description"]` (or `["*all"]` if needed):
+
+1. **Before drafting** — treat the returned description as the current source of truth.
+2. **Immediately before `editJiraIssue`** — fetch again so human or prior AI edits during the session are not lost.
+
+Merge rules:
+
+- **Do not** rebuild from an earlier chat draft if Jira has newer content.
+- **Do not** ignore manual edits. If a human changed WHO / WHAT / WHY / AC, start from their version and apply only the user's new request.
+- **Partial update** (default): change only what the user asked for; keep everything else from the latest fetch.
+- **Full rewrite**: only when the user explicitly asks to rewrite the whole story.
+- If latest Jira content differs from what you assumed, mention the diff briefly before publishing.
+
+Typical failure to avoid: AI wrote v1 → human fixed v2 → AI publishes v1 again. Always publish from v2 + new changes.
 
 ## Open Questions
 
@@ -99,17 +144,30 @@ Rules:
 
 ## Full description template
 
-Combine story and AC for Jira `description`:
+**Chat preview:**
 
 ```markdown
-**WHO:** ...<br>**WHAT:** ...<br>**WHY:** ...
+**WHO:** ...
+**WHAT:** ...
+**WHY:** ...
 
 ## Acceptance Criteria
 
 ### ...
+------
+
+### ...
 ```
 
-Set `summary` from WHAT (short, imperative, no period) unless the user specified a title.
+**Jira `description` field** — ADF document (`contentFormat: "adf"`):
+
+- WHO / WHAT / WHY: one `paragraph` with `hardBreak` between rows (see above)
+- `## Acceptance Criteria` → `heading` level 2
+- each scenario title → `heading` level 3
+- GIVEN / WHEN / THEN → `bulletList` / `listItem` / nested lists; bold labels via `strong` mark
+- between scenarios → `{ "type": "rule" }` (horizontal divider); omit after the last scenario
+
+Set `summary` from WHAT (short, imperative, no period) unless the user specified a title or the latest Jira summary should stay.
 
 ## Publish to Jira (Atlassian MCP)
 
@@ -120,14 +178,14 @@ Use server `user-atlassian-mcp-official`.
    - Otherwise call `getAccessibleAtlassianResources` and pick the matching site.
 
 2. **Existing issue** (user gave a key like `PROJ-123`)
-   - `getJiraIssue` with `issueIdOrKey` to read current summary/description.
-   - Merge carefully: replace description with the new draft unless the user asked to append or preserve parts.
-   - `editJiraIssue` with `contentFormat: "markdown"` and `fields`:
-     - `description`: full template above (WHO/WHAT/WHY with `<br>`, AC with `##` / `###`)
+   - `getJiraIssue` — **required**, twice: before draft and before edit (see [Read before write](#read-before-write)).
+   - Merge the draft into the **latest** description; do not overwrite human edits unless asked.
+   - `editJiraIssue` with `contentFormat: "adf"` and `fields`:
+     - `description`: full ADF document
      - `summary`: only if it should change
 
 3. **New issue** (user gave project + type, no key)
-   - `createJiraIssue` with `issueTypeName: "Story"` (or the type the user named), `projectKey`, `summary`, `description`, `contentFormat: "markdown"`.
+   - `createJiraIssue` with `issueTypeName: "Story"` (or the type the user named), `projectKey`, `summary`, `description`, `contentFormat: "adf"`.
 
 4. **Confirm** — return the issue key and link after a successful create or edit.
 
@@ -142,10 +200,13 @@ If MCP auth fails, tell the user to authenticate the Atlassian MCP server and re
 
 ## Checklist before publish
 
-- [ ] WHO / WHAT / WHY in one block with `<br>` line breaks; labels bold
+- [ ] `getJiraIssue` fetched latest description (twice if editing existing issue)
+- [ ] Draft built from live Jira content + user request, not stale chat draft
+- [ ] WHO / WHAT / WHY in one ADF paragraph with `hardBreak`; labels bold; no `<br>`
 - [ ] WHY is outcome/value, not a WHAT repeat
 - [ ] Acceptance Criteria is H2; each scenario title is H3
 - [ ] AC uses GIVEN / WHEN / THEN / AND with correct bullets and indent
+- [ ] Divider (`------` / ADF `rule`) between AC scenarios, not after the last one
 - [ ] No numbered AC items; no em dash
 - [ ] All text in English
 - [ ] Open Questions listed in chat when ambiguities exist
