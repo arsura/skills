@@ -6,6 +6,20 @@ Personal agent skills and rules for **Cursor** and **Claude Code**.
 
 ## Skills
 
+### jira-story-crafting
+
+Draft Jira user stories as **WHO / WHAT / WHY** plus **GIVEN / WHEN / THEN** acceptance criteria, validate WHY, surface **Open Questions** while drafting, and push to Jira via Atlassian MCP.
+
+**Use when:** writing or refining a user story, acceptance criteria, or updating a Jira ticket description.
+
+**Install skill:**
+
+```bash
+npx skills add arsura/skills --skill jira-story-crafting -g -a cursor -a claude-code
+```
+
+---
+
 ### top-down-function-order
 
 Order Go functions **top-down (newspaper style)** — each caller immediately followed by its callees in call order. Never dump helpers at the bottom of the file.
