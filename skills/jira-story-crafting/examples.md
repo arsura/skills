@@ -14,13 +14,13 @@ The bad WHY restates WHAT. The good WHY names the pain and cost.
 
 ---
 
-**Input:** Export report to CSV.
+**Input:** Require two-factor authentication on login.
 
 | | Text |
 |---|------|
-| WHAT | Allow users to export the monthly sales report as CSV |
-| BAD WHY | Users need to export the report to CSV |
-| GOOD WHY | Finance reconciles sales in Excel today and manually re-enters data, which is slow and error-prone |
+| WHAT | Require two-factor authentication on login |
+| BAD WHY | Users should verify their identity with 2FA |
+| GOOD WHY | Shared-password accounts led to unauthorized access on three customer orgs last quarter |
 
 ---
 
@@ -34,46 +34,85 @@ The bad WHY restates WHAT. The good WHY names the pain and cost.
 
 ## Full story example
 
-**Input:** Restaurant owners want to pause orders during rush hour without closing the store. Issue: FOOD-482.
+**Input:** Clinic patients need to reschedule appointments online instead of calling reception. Issue: CARE-218.
 
 ```markdown
-**WHO:** Restaurant owner on the merchant app
-**WHAT:** Pause incoming orders temporarily while keeping the store listed as open
-**WHY:** During unexpected rushes, owners cannot fulfill orders in time and receive cancellations that hurt their rating
+**WHO:** Patient using the clinic booking portal
+**WHAT:** Reschedule an upcoming appointment to a new date and time slot
+**WHY:** Phone rescheduling ties up reception staff and patients often wait on hold during peak hours
+
+------
 
 ## Acceptance Criteria
 
-### Owner pauses orders from the dashboard
+### Patient reschedules to an available slot
 - **GIVEN:**
-  - the store is open and accepting orders
-- **WHEN:** the owner taps Pause orders and confirms
+  - the patient has a confirmed appointment in the future
+  - **AND:** alternative slots exist for the same service type
+- **WHEN:** the patient selects a new slot and confirms
 - **THEN:**
-  - new customer orders are blocked
-  - **AND:** the store still appears open on the consumer app
+  - the original appointment is cancelled
+  - **AND:** the new appointment appears as confirmed in the portal
 
 ------
 
-### Owner resumes orders
+### Patient cannot reschedule inside the cutoff window
 - **GIVEN:**
-  - orders are paused
-- **WHEN:** the owner taps Resume orders
+  - the appointment starts in less than 24 hours
+- **WHEN:** the patient opens the reschedule flow
 - **THEN:**
-  - new orders are accepted again
-  - **AND:** the pause state clears without a page reload
+  - the portal shows that online rescheduling is unavailable
+  - **AND:** offers a link to contact reception
 
 ------
 
-### Pause expires automatically
+### Patient receives confirmation email
 - **GIVEN:**
-  - the owner paused orders with a 30-minute duration
-  - **AND:** 30 minutes have elapsed
-- **WHEN:** the timer expires
+  - the patient successfully rescheduled an appointment
+- **WHEN:** the update is saved
 - **THEN:**
-  - orders resume automatically
-  - **AND:** the owner receives a push notification
+  - the patient receives an email with the new date, time, and location
 ```
 
 **Open Questions** (chat only, not pushed to Jira):
 
-- Should pause support a fixed duration, manual resume only, or both?
-- Should the consumer app show that the store is temporarily not accepting orders?
+- Can patients reschedule across different doctors for the same service type?
+- Should reception get a notification when a patient reschedules online?
+
+## Code-like text in AC
+
+Wrap field names, types, enums, and URL schemes in backticks (chat) or ADF `code` mark (Jira).
+
+```markdown
+**WHO:** Catalog manager
+**WHAT:** Bulk-import product records into the admin console via CSV upload
+**WHY:** Manual one-by-one entry delays seasonal launches and causes mismatched pricing across regions
+
+------
+
+## Acceptance Criteria
+
+### Reject invalid status values
+- **GIVEN:** a row has a `status` value that is not one of `DRAFT`, `ACTIVE`, `ARCHIVED`
+- **WHEN:** the system validates the file
+- **THEN:** the system rejects that row and reports the row number and the invalid value
+
+------
+
+### Validate redirect URL domain
+- **GIVEN:** a row has a `redirect_url` that does not start with `https://shop.example.com/`
+- **WHEN:** the system validates the file
+- **THEN:** the system rejects that row and reports the row number and the URL that failed the whitelist check
+
+------
+
+### CSV Field Spec
+| Field | Example | Required |
+| `sku` | `WIDGET-42` | Yes |
+| `status` | `ACTIVE` | Yes |
+| `redirect_url` | `https://shop.example.com/widgets/42` | Optional |
+
+Allowed `ProductStatus` enum values: `DRAFT`, `ACTIVE`, `ARCHIVED`
+```
+
+Note the divider after WHY, between scenarios, and before the user-requested appendix. No divider after the last section.

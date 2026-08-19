@@ -23,7 +23,7 @@ This is **not** alphabetical, **not** helpers-first, and **not** "all tests then
 3. types
 4. Test runner / entry points
 5. lifecycle hooks (SetupSuite, SetupTest, TearDown*)
-6. lifecycle callees     (resetSchema, runMigrateUpTo, …) — directly below hooks
+6. lifecycle callees     (resetDatabase, applyMigrations, …) — directly below hooks
 7. tests + callees       (interleaved — see below)
 ```
 
@@ -32,23 +32,23 @@ This is **not** alphabetical, **not** helpers-first, and **not** "all tests then
 After each `Test*`, append **every function it calls**, in **the order they appear in the test body**, before the next test.
 
 ```go
-func (s *Suite) TestAdEvents() {
-    s.insertAdEvents(...)
-    actual := s.queryAdEvents(...)
-    s.assertAdEvents(expected, actual)
+func (s *Suite) TestCreateInvoice() {
+    s.seedCustomer(...)
+    actual := s.createInvoice(...)
+    s.assertInvoice(expected, actual)
 }
 
-func (s *Suite) insertAdEvents(...) { ... }      // ← right below test
+func (s *Suite) seedCustomer(...) { ... }        // ← right below test
 
-func (s *Suite) queryAdEvents(...) { ... }       // ← next callee
+func (s *Suite) createInvoice(...) { ... }       // ← next callee
 
-func (s *Suite) assertAdEvents(...) {           // ← next callee
-    s.assertAdEventEqual(...)
+func (s *Suite) assertInvoice(...) {              // ← next callee
+    s.assertLineItemsEqual(...)
 }
 
-func (s *Suite) assertAdEventEqual(...) { ... }   // ← deepest, still below assertAdEvents
+func (s *Suite) assertLineItemsEqual(...) { ... } // ← deepest, still below assertInvoice
 
-func (s *Suite) TestAdEventsDistributed() { ... }  // ← next test after helper chain
+func (s *Suite) TestCreateInvoiceWithTax() { ... } // ← next test after helper chain
 ```
 
 ## Shared helpers across tests
@@ -59,26 +59,26 @@ func (s *Suite) TestAdEventsDistributed() { ... }  // ← next test after helper
 
 ```go
 func (s *Suite) TestPrimaryFlow() {
-    row := makeRow()              // 1st use of makeRow
-    s.insert(row)
-    s.assert(s.query(...))
+    user := makeUser()              // 1st use of makeUser
+    s.register(user)
+    s.assertProfile(s.fetchProfile(...))
 }
 
-func makeRow() { ... }            // immediately below TestPrimaryFlow
-func (s *Suite) insert(...) { ... }
-func (s *Suite) query(...) { ... }
-func (s *Suite) assert(...) { ... }
+func makeUser() { ... }             // immediately below TestPrimaryFlow
+func (s *Suite) register(...) { ... }
+func (s *Suite) fetchProfile(...) { ... }
+func (s *Suite) assertProfile(...) { ... }
 
-func (s *Suite) TestWithExtraSetup() {
-    row := makeRow()              // reuses makeRow — already defined above
-    s.insertRegion(row)
-    s.insert(row)
+func (s *Suite) TestWithOrganization() {
+    user := makeUser()              // reuses makeUser — already defined above
+    s.createOrganization(user)
+    s.register(user)
     ...
 }
 
-func (s *Suite) insertRegion(...) { ... }  // NEW — directly below TestWithExtraSetup
+func (s *Suite) createOrganization(...) { ... } // NEW — directly below TestWithOrganization
 
-func (s *Suite) TestAnotherReuse() { ... } // only reuses existing helpers
+func (s *Suite) TestAnotherReuse() { ... }      // only reuses existing helpers
 ```
 
 ## Lifecycle hooks
@@ -87,44 +87,44 @@ Same immediate-callee rule:
 
 ```go
 func (s *Suite) SetupSuite() {
-    s.resetSchema()
-    s.runMigrateUpTo(...)
+    s.resetDatabase()
+    s.applyMigrations(...)
 }
 
-func (s *Suite) resetSchema() { ... }       // directly below SetupSuite block
-func (s *Suite) runMigrateUpTo(...) { ... }
+func (s *Suite) resetDatabase() { ... }    // directly below SetupSuite block
+func (s *Suite) applyMigrations(...) { ... }
 ```
 
 ## Migrations / services
 
 ```go
-func registerUpWarmup() { ... }
+func registerCreatePostsTable() { ... }
 
-func upWarmup(ctx, conn) error {
-    count, err := countTableRows(...)
+func upCreatePostsTable(ctx, conn) error {
+    count, err := countRows(conn, "posts")
     return conn.Exec(ctx, query)
 }
 
-func countTableRows(...) { ... }   // directly below upWarmup
+func countRows(...) { ... }   // directly below upCreatePostsTable
 ```
 
 ## Anti-patterns
 
 ```go
 // BAD — all tests first, helpers at bottom (reader must scroll far)
-func TestA() { makeRow(); insert() }
-func TestB() { makeRow() }
-func makeRow() { ... }   // ← too far from TestA
-func insert() { ... }
+func TestA() { makeUser(); register() }
+func TestB() { makeUser() }
+func makeUser() { ... }   // ← too far from TestA
+func register() { ... }
 
 // BAD — helpers before tests
-func insert() { ... }
-func TestA() { insert() }
+func register() { ... }
+func TestA() { register() }
 
 // BAD — alphabetical among helpers
-func assert(...) { ... }
-func insert(...) { ... }
-func query(...) { ... }
+func assertProfile() { ... }
+func fetchProfile() { ... }
+func register() { ... }
 ```
 
 ## When editing

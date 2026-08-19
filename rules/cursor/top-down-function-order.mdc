@@ -25,20 +25,20 @@ package + imports → constants/vars → types → entry points
 After each `Test*`, append every function it calls, **in call order**, before the next test:
 
 ```go
-func (s *Suite) TestAdEvents() {
-    s.insertAdEvents(...)
-    actual := s.queryAdEvents(...)
-    s.assertAdEvents(expected, actual)
+func (s *Suite) TestCreateInvoice() {
+    s.seedCustomer(...)
+    actual := s.createInvoice(...)
+    s.assertInvoice(expected, actual)
 }
 
-func (s *Suite) insertAdEvents(...) { ... }
-func (s *Suite) queryAdEvents(...) { ... }
-func (s *Suite) assertAdEvents(...) {
-    s.assertAdEventEqual(...)
+func (s *Suite) seedCustomer(...) { ... }
+func (s *Suite) createInvoice(...) { ... }
+func (s *Suite) assertInvoice(...) {
+    s.assertLineItemsEqual(...)
 }
-func (s *Suite) assertAdEventEqual(...) { ... }
+func (s *Suite) assertLineItemsEqual(...) { ... }
 
-func (s *Suite) TestAdEventsDistributed() { ... }
+func (s *Suite) TestCreateInvoiceWithTax() { ... }
 ```
 
 ## Shared helpers
@@ -51,14 +51,14 @@ func (s *Suite) TestAdEventsDistributed() { ... }
 
 ```go
 // BAD — helpers at bottom, far from callers
-func TestA() { makeRow(); insert() }
-func TestB() { makeRow() }
-func makeRow() { ... }
-func insert() { ... }
+func TestA() { makeUser(); register() }
+func TestB() { makeUser() }
+func makeUser() { ... }
+func register() { ... }
 
 // BAD — helpers before tests
-func insert() { ... }
-func TestA() { insert() }
+func register() { ... }
+func TestA() { register() }
 ```
 
 ## When editing
