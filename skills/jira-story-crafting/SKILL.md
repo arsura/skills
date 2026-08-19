@@ -28,13 +28,13 @@ Turn rough requirements into a concise English user story and push it to Jira.
 | **WHAT** | The capability or change. Concrete and testable. No implementation detail unless the user required it. |
 | **WHY** | Business or user outcome. Must **not** restate WHAT. See validation below. |
 
-Use this exact layout (labels bold, content plain):
+Use this exact layout (labels bold, content plain). **One block, line breaks only** — like Shift+Enter in Jira, not Enter (no blank lines between rows):
 
 ```markdown
-**WHO:** [role or persona]
-**WHAT:** [capability or change]
-**WHY:** [reason this matters]
+**WHO:** [role or persona]<br>**WHAT:** [capability or change]<br>**WHY:** [reason this matters]
 ```
+
+In Jira markdown, join WHO / WHAT / WHY with `<br>`. Do **not** put a blank line between them (that creates separate paragraphs).
 
 ## WHY validation
 
@@ -52,14 +52,14 @@ More examples: [examples.md](examples.md)
 
 Write in **English**. Keep each scenario short. No numbered AC items (so they can be reordered). **Never use em dash** (`—` or `–`); use a comma, period, or rephrase instead.
 
-Section heading: **Acceptance Criteria** (bold).
+Section heading: `## Acceptance Criteria` (H2).
 
-Each scenario starts with a one-line title (plain text, no number). Structure:
+Each scenario title: `### [Short scenario title]` (H3). Structure:
 
 ```markdown
-**Acceptance Criteria**
+## Acceptance Criteria
 
-[Short scenario title]
+### [Short scenario title]
 - **GIVEN:**
   - [precondition]
   - **AND:** [additional precondition]
@@ -102,13 +102,11 @@ Rules:
 Combine story and AC for Jira `description`:
 
 ```markdown
-**WHO:** ...
-**WHAT:** ...
-**WHY:** ...
+**WHO:** ...<br>**WHAT:** ...<br>**WHY:** ...
 
-**Acceptance Criteria**
+## Acceptance Criteria
 
-...
+### ...
 ```
 
 Set `summary` from WHAT (short, imperative, no period) unless the user specified a title.
@@ -125,7 +123,7 @@ Use server `user-atlassian-mcp-official`.
    - `getJiraIssue` with `issueIdOrKey` to read current summary/description.
    - Merge carefully: replace description with the new draft unless the user asked to append or preserve parts.
    - `editJiraIssue` with `contentFormat: "markdown"` and `fields`:
-     - `description`: full template above
+     - `description`: full template above (WHO/WHAT/WHY with `<br>`, AC with `##` / `###`)
      - `summary`: only if it should change
 
 3. **New issue** (user gave project + type, no key)
@@ -144,8 +142,9 @@ If MCP auth fails, tell the user to authenticate the Atlassian MCP server and re
 
 ## Checklist before publish
 
-- [ ] WHO / WHAT / WHY present; labels bold
+- [ ] WHO / WHAT / WHY in one block with `<br>` line breaks; labels bold
 - [ ] WHY is outcome/value, not a WHAT repeat
+- [ ] Acceptance Criteria is H2; each scenario title is H3
 - [ ] AC uses GIVEN / WHEN / THEN / AND with correct bullets and indent
 - [ ] No numbered AC items; no em dash
 - [ ] All text in English
