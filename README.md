@@ -40,6 +40,20 @@ git clone git@github.com:arsura/skills.git /tmp/skills && /tmp/skills/scripts/in
 
 ---
 
+### explicit-expects
+
+Write Go tests whose `want` is **hand-written literals compared in full with one assert** — no `Contains`, no count-only DB asserts, no production constants/enums inside the expectation. Covers unit tests, IT/HTTP JSON responses, validation errors, mappers, and DB state.
+
+**Use when:** writing or reviewing unit tests, IT tests, table-driven tests, validation/error tests, or when you want explicit hardcoded expectations.
+
+**Install skill:**
+
+```bash
+npx skills add arsura/skills --skill explicit-expects -g -a cursor -a claude-code
+```
+
+---
+
 ## Install
 
 **Skills:**
