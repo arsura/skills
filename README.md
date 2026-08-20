@@ -35,7 +35,7 @@ npx skills add arsura/skills --skill top-down-function-order -g -a cursor -a cla
 **Install rule:**
 
 ```bash
-git clone git@github.com:arsura/skills.git /tmp/skills && /tmp/skills/scripts/install-rules.sh --global
+git clone git@github.com:arsura/skills.git /tmp/skills && /tmp/skills/scripts/install-rules.sh --global --rule top-down-function-order
 ```
 
 ---
@@ -62,11 +62,28 @@ npx skills add arsura/skills --skill explicit-expects -g -a cursor -a claude-cod
 npx skills add arsura/skills -g -a cursor -a claude-code
 ```
 
-**Rules:**
+**Rules** (all of them):
 
 ```bash
 git clone git@github.com:arsura/skills.git /tmp/skills && /tmp/skills/scripts/install-rules.sh --global
 ```
+
+**Pick which rules to install:**
+
+```bash
+/tmp/skills/scripts/install-rules.sh --list                        # see what is available
+/tmp/skills/scripts/install-rules.sh --rule top-down-function-order --global
+/tmp/skills/scripts/install-rules.sh --rule a,b --project          # repeatable or comma-separated
+```
+
+| Flag | Meaning |
+| --- | --- |
+| `--global` | Install to `~/.cursor/rules/` and `~/.claude/CLAUDE.md` (default) |
+| `--project` | Install to `./.cursor/rules/` and `./CLAUDE.md` |
+| `--rule NAME` | Install only this rule; repeat or comma-separate. Omit to install all |
+| `--list` | List available rule names |
+
+Re-running is idempotent — Claude rule blocks are replaced in place, not duplicated.
 
 **Everything (copy-paste):**
 
